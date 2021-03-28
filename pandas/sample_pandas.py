@@ -55,9 +55,6 @@ print(df2.columns)
 print(df2.sort_values(by=['カテゴリ１', 'カテゴリ２'], ascending=[True, True], na_position='first').head(3))
 
 
-# ['施設名', '施設名（英語）', '郵便番号', '住所', '緯度', '経度', '電話番号', 'カテゴリ１', 'カテゴリ２',
-#    'FAX番号', '合計園児定員（名）', '０歳児定員（名）', '１歳児定員（名）', '２歳児定員（名）', '３歳児定員（名）',
-#    '４・５歳児定員（名）', '説明（日本語）', '説明（英語）']
 
 # 列指定取得
 print(df2[['施設名', '合計園児定員（名）']])
@@ -126,3 +123,83 @@ print(df2.groupby(['カテゴリ１', 'カテゴリ２']).agg(['count','max', 'm
 print(df2.describe())
 
 print(df2.describe().loc['mean']['０歳児定員（名）'])
+
+
+# ['施設名', '施設名（英語）', '郵便番号', '住所', '緯度', '経度', '電話番号', 'カテゴリ１', 'カテゴリ２',
+#    'FAX番号', '合計園児定員（名）', '０歳児定員（名）', '１歳児定員（名）', '２歳児定員（名）', '３歳児定員（名）',
+#    '４・５歳児定員（名）', '説明（日本語）', '説明（英語）']
+
+
+# 行追加　行番号指定する。
+df2.loc[len(df2)] = ['追加保育園', 'add hoiku', '123-4567', '追加　住所', 0.0, 0.0, '03-1111-2222','区立保育園','認可保育園', '03-3333-4444', 100, 10, 20, 30, 40, 50, '説明（日本語）', '説明（英語）']
+
+# 列追加　既存の行にすべて値が設定される。
+df2['追加区分'] = 'ついか'
+print(df2.tail(2))
+
+# 列削除 columns指定
+df3 = df2.drop(columns=['施設名（英語）', '緯度', '経度', '電話番号', 'FAX番号', '合計園児定員（名）'])
+print(df3['施設名'].tail(1))
+# 列削除 columns指定 内包表記で除外
+df3 = df2[[col for col in df2.columns if '定員' not in col]]
+print(df3['施設名'].tail(1))
+
+
+# 行削除　項目と値を指定して条件にマッチしたものを抽出。否定条件にすることで除外。
+df4 = df2[df2['施設名'] != 'モニカ茗荷谷']
+print(df4['施設名'].tail(2))
+
+# 行削除　インデックス指定
+df4 = df4.drop(index=[1, 3, 5])
+print(df4['施設名'].tail(2))
+# 行削除　インデックス＝要素番号ではないので、同じインデックスを指定して2回目の削除を実行するとエラー
+# df4 = df4.drop(index=[1, 3, 5])
+# print(df4.tail(2))
+
+# 文字列カラムを指定
+df4.index = df4['施設名']
+df4 = df4.drop(index=['追加保育園'], axis=0)
+print(df4['施設名'].tail(2))
+
+
+# 欠損値
+print(df2.isnull().sum())
+
+# 欠損値削除　と確認
+print(df3.dropna().shape)
+
+# 欠損値確認
+print(df4[df4.isnull().any(axis=1)].head(3))
+# 欠損値に値設定
+df5 = df4.fillna(0)
+print(df5[df5.isnull().any(axis=1)].head(3))
+
+# データ型確認
+print(df5.dtypes)
+
+# データ型変更
+df5 = df5.astype({
+    '０歳児定員（名）': int,
+    '１歳児定員（名）': int,
+    '２歳児定員（名）': int,
+    '３歳児定員（名）': int,
+    '４・５歳児定員（名）': int,
+})
+print(df5.dtypes)
+print(df5.info())
+
+# 各行の欠損値の数確認
+print(df2.isnull().sum(axis=1))
+# 各列の欠損値の数確認
+print(df2.isnull().sum(axis=0))
+
+
+# 表結合
+# names = [row for row in df2['施設名'] if '保育園' not in row]
+# print(df2['施設名' == names].shape[0])
+pd.merge(df2, df3, on='施設名', how='inner')
+
+# inner: 内部結合
+# left: 外部結合
+# right: 右外部結合　2つ目のデータのキーをすべて残す
+# outer: 完全外部結合　すべてのキーを残す
